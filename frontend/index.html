@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>A股短线决策辅助工具</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- 顶部状态栏 -->
+  <div id="status-bar">
+    <span id="status-time">--:--</span>
+    <span id="status-title">A股决策工具</span>
+    <span id="status-lamp">● ● ● ●</span>
+  </div>
+
+  <!-- 大盘概况 -->
+  <div id="market-bar">
+    <div class="market-item" id="market-sh">
+      <span class="market-name">上证</span>
+      <span class="market-price">--</span>
+      <span class="market-change">--</span>
+    </div>
+    <div class="market-item" id="market-sz">
+      <span class="market-name">深证</span>
+      <span class="market-price">--</span>
+      <span class="market-change">--</span>
+    </div>
+    <div class="market-item" id="market-cy">
+      <span class="market-name">创业板</span>
+      <span class="market-price">--</span>
+      <span class="market-change">--</span>
+    </div>
+  </div>
+
+  <!-- Tab导航 -->
+  <div id="tab-bar">
+    <button class="tab-btn active" data-tab="home">🏠 首页</button>
+    <button class="tab-btn" data-tab="search">🔍 搜索</button>
+    <button class="tab-btn" data-tab="detail">📊 详情</button>
+    <button class="tab-btn" data-tab="settings">⚙️ 设置</button>
+  </div>
+
+  <!-- 页面容器 -->
+  <div id="page-container">
+    <!-- ====== 首页 ====== -->
+    <div id="page-home" class="page active">
+      <div class="page-header">
+        <h2>自选股列表</h2>
+        <button class="btn-refresh" onclick="refreshAll()">🔄 刷新</button>
+      </div>
+      <div id="watchlist-container" class="list-container">
+        <div class="loading">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ====== 搜索页 ====== -->
+    <div id="page-search" class="page">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="输入股票名称或代码（如：茅台、600519）" oninput="doSearch(this.value)" />
+        <button onclick="doSearch(document.getElementById('search-input').value)">搜索</button>
+      </div>
+      <div id="search-results" class="list-container">
+        <div class="hint">输入关键词开始搜索</div>
+      </div>
+    </div>
+
+    <!-- ====== 详情页 ====== -->
+    <div id="page-detail" class="page">
+      <div id="detail-content">
+        <div class="hint">请先在首页或搜索页选择一只股票</div>
+      </div>
+    </div>
+
+    <!-- ====== 设置页 ====== -->
+    <div id="page-settings" class="page">
+      <div class="page-header">
+        <h2>设置</h2>
+      </div>
+      <div class="setting-group">
+        <h3>刷新间隔</h3>
+        <div class="interval-buttons">
+          <button class="interval-btn" data-interval="30" onclick="setInterval(30)">30秒</button>
+          <button class="interval-btn active" data-interval="60" onclick="setInterval(60)">1分钟</button>
+          <button class="interval-btn" data-interval="300" onclick="setInterval(300)">5分钟</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <h3>自选股管理</h3>
+        <div id="watchlist-manage" class="list-container">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <h3>关于</h3>
+        <div class="about-info">
+          <p>A股短线决策辅助工具 v1.0</p>
+          <p>四灯决策指示系统</p>
+          <p>数据来源：东方财富</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航安全区 -->
+  <div id="bottom-safe"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
