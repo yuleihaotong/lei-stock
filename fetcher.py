@@ -3,14 +3,11 @@ fetcher.py - 东方财富公开行情接口封装
 支持A股实时行情查询、股票名称/代码模糊搜索、K线数据获取、大盘概况
 """
 
-import re
-import json
 import time
+from dataclasses import dataclass
 from typing import Optional
-from dataclasses import dataclass, field
 
 import requests
-
 
 # ─── 常量 ─────────────────────────────────────────────────────────────
 
@@ -132,6 +129,14 @@ def _secid(code: str) -> str:
     return f"{_market_flag(code)}.{code}"
 
 
+def _amplitude(high, low, pre_close) -> float:
+    """振幅 % =（最高-最低）/ 昨收 * 100"""
+    h, l, pc = _pv(high), _pv(low), _pv(pre_close)
+    if pc <= 0:
+        return 0.0
+    return round((h - l) / pc * 100.0, 2)
+
+
 def _pv(val) -> float:
     """安全转浮点"""
     if val in (None, "-", "", "--"):
@@ -193,7 +198,7 @@ def fetch_quote(code: str) -> Optional[StockQuote]:
         "ut": "bd1d9ddb04089700cf9c27f6f7426281",
         "fltt": 2, "invt": 2,
         "secid": _secid(code),
-        "fields": "f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f14,f15,f16,f17,f18,f20,f21,f24,f25,f31,f32,f33,f34,f35,f36,f37,f38,f39,f40,f41,f43,f44,f45,f46,f47,f48,f50,f57,f58,f60,f61,f62,f115,f116,f117,f152",
+        "fields": "f43,f44,f45,f46,f47,f48,f57,f58,f60,f168,f169,f170,f9,f23",
     }
     try:
         resp = requests.get(EASTMONEY_QUOTE_URL, params=params, headers=HEADERS, timeout=10)
@@ -201,21 +206,21 @@ def fetch_quote(code: str) -> Optional[StockQuote]:
         if not data:
             return None
         return StockQuote(
-            code=str(data.get("f12", code)),
-            name=str(data.get("f14", "")),
+            code=str(data.get("f57") or code),
+            name=str(data.get("f58") or ""),
             price=_pv(data.get("f43") or data.get("f2")),
-            change=_pv(data.get("f44") or data.get("f170") or data.get("f4")),
-            change_pct=_pv(data.get("f45") or data.get("f3") or data.get("f170")),
+            change=_pv(data.get("f169")),
+            change_pct=_pv(data.get("f170")),
             high=_pv(data.get("f44") or data.get("f15")),
             low=_pv(data.get("f45") or data.get("f16")),
             open_p=_pv(data.get("f46") or data.get("f17")),
-            pre_close=_pv(data.get("f47") or data.get("f18")),
-            volume=_pv(data.get("f5") or data.get("f47")),
+            pre_close=_pv(data.get("f60")),
+            volume=_pv(data.get("f47")),
             amount=_pv(data.get("f6") or data.get("f48")),
             turnover_rate=_pv(data.get("f168") or data.get("f38")),
-            amplitude=_pv(data.get("f8") or data.get("f37")),
+            amplitude=_amplitude(data.get("f44"), data.get("f45"), data.get("f60")),
             pe=_pv(data.get("f9") or data.get("f39")),
-            pb=_pv(data.get("f12") or data.get("f23") or data.get("f34")),
+            pb=_pv(data.get("f23")),
             timestamp=int(time.time()),
         )
     except Exception as e:
@@ -310,7 +315,7 @@ def fetch_kline(code: str, days: int = 30) -> list[KlineItem]:
                         close_p=float(parts[2]),
                         high_p=float(parts[3]),
                         low_p=float(parts[4]),
-                        volume=float(parts[5]) / 100,
+                        volume=float(parts[5]),
                         amount=float(parts[6]),
                     )
                     items.append(item)

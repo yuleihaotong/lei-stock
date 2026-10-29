@@ -7,12 +7,14 @@ indicator_engine.py - 四灯决策指示系统核心逻辑
 """
 
 from typing import Optional
-from fetcher import StockQuote, KlineItem, fetch_quote, fetch_kline, fetch_quotes_batch
-from analyzer import (
-    calc_all_ma, calc_volatility, calc_volume_ratio,
-    calc_support_resistance, calc_ma_trend,
-)
 
+from analyzer import (
+    calc_all_ma,
+    calc_ma_trend,
+    calc_support_resistance,
+    calc_volume_ratio,
+)
+from fetcher import KlineItem, StockQuote, fetch_kline, fetch_quote
 
 # ─── 四灯判断函数 ─────────────────────────────────────────────────────
 
@@ -203,7 +205,7 @@ def analyze(code: str, kline_data: Optional[list[KlineItem]] = None,
         quote = fetch_quote(code)
 
     if kline_data:
-        result.name = kline_data[-1].date if kline_data else ""
+        result.name = (quote.name if quote and quote.name else "")
         result.qujian = judge_qujian(kline_data, quote)
         result.zoushi = judge_zoushi(kline_data)
         result.bankuai = judge_bankuai(code, kline_data)
