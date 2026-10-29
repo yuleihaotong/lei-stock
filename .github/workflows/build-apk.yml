@@ -4,10 +4,10 @@
 
 name: Build APK
 
+# 2026-10 备注：buildozer + python-for-android 在现役 runner 上已构建失败，
+# 保留此文件仅作历史参考，不再随 push 触发，也未维护。
 on:
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
 
 jobs:
   build:
