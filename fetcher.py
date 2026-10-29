@@ -285,9 +285,16 @@ def search_stocks(keyword: str) -> list[dict]:
     return results[:30]
 
 
-def fetch_kline(code: str, days: int = 30) -> list[KlineItem]:
-    """获取日K线数据"""
+def fetch_kline(code: str, days: int = 30, beg: str = "0",
+                end: str = "20500101") -> list[KlineItem]:
+    """获取日K线数据。
+
+    :param days: 只取最近 days 根；beg 给定时仅作上限
+    :param beg:  起始日期 YYYYMMDD，用于按区间取历史
+    :param end:  结束日期 YYYYMMDD
+    """
     code = _fmt_code(code)
+    in_range = beg != "0"
     params = {
         "ut": "bd1d9ddb04089700cf9c27f6f7426281",
         "fields1": "f1,f2,f3,f4,f5,f6",
@@ -295,9 +302,9 @@ def fetch_kline(code: str, days: int = 30) -> list[KlineItem]:
         "klt": "101",
         "fqt": "1",
         "secid": _secid(code),
-        "beg": "0",
-        "end": "20500101",
-        "lmt": str(days + 10),
+        "beg": beg,
+        "end": end,
+        "lmt": str(10000 if in_range else days + 10),
     }
     try:
         resp = requests.get(EASTMONEY_KLINE_URL, params=params, headers=HEADERS, timeout=10)

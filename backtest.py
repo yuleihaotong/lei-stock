@@ -229,6 +229,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("codes", nargs="*", help="股票代码；留空则用内置样本池")
     parser.add_argument("--universe", action="store_true", help="跑内置的 10 只样本")
     parser.add_argument("--days", type=int, default=500, help="每只股票取多少个交易日")
+    parser.add_argument("--beg", type=str, default="0", help="起始日期 YYYYMMDD（给了就按区间取）")
+    parser.add_argument("--end", type=str, default="20500101", help="结束日期 YYYYMMDD")
     parser.add_argument("--out", type=str, default="reports/backtest.md")
     parser.add_argument("--csv", type=str, default="reports/trades.csv")
     args = parser.parse_args(argv)
@@ -242,7 +244,8 @@ def main(argv: list[str] | None = None) -> int:
     all_trades: list[Trade] = []
 
     for code in codes:
-        bars = fetch_kline(code, days=max(args.days, 60))
+        span = 100000 if args.beg != "0" else max(args.days, 60)
+        bars = fetch_kline(code, days=span, beg=args.beg, end=args.end)
         if len(bars) < WARMUP + 10:
             print(f"[skip] {code}: 只有 {len(bars)} 根 K 线，样本不足", file=sys.stderr)
             continue
