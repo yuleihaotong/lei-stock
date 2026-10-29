@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 虚拟环境
+.venv/
+venv/
+
+# 本地数据
+*.db
+*.sqlite
+*.sqlite3
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store
