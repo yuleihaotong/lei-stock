@@ -225,3 +225,15 @@ buildozer android debug
 - 建议刷新间隔 ≥30秒，避免请求过于频繁
 - 四灯决策为技术分析参考，不构成投资建议
 - 股市有风险，投资需谨慎
+
+---
+
+## 🧪 回测
+
+`backtest.py` 用来回答一个问题：**四灯亮起之后买入，历史上到底赚不赚。**
+
+用法见 [BACKTEST.md](BACKTEST.md)，结论见 [docs/backtest-findings.md](docs/backtest-findings.md)。
+
+```bash
+python backtest.py --universe --days 500
+```
