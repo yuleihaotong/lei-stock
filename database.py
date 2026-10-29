@@ -4,11 +4,7 @@ database.py - SQLite存储模块
 """
 
 import os
-import json
 import sqlite3
-from typing import Optional
-from datetime import datetime
-
 
 DB_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(DB_DIR, "stock_data.db")

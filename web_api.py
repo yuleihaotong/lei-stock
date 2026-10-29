@@ -4,31 +4,38 @@ web_api.py - Flask API服务（APK模式专用）
 """
 
 import json
-import time
 import threading
 from typing import Optional
 
 try:
-    from flask import Flask, request, jsonify
+    from flask import Flask, jsonify, request
     from flask_cors import CORS
     FLASK_AVAILABLE = True
 except ImportError:
     FLASK_AVAILABLE = False
     # 降级方案：用Python内置HTTP服务器
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-    import urllib.parse
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from fetcher import (
-    fetch_market_overview, fetch_quote, fetch_kline,
-    fetch_quotes_batch, search_stocks, StockQuote, KlineItem
-)
-from analyzer import calc_all_ma, calc_volatility, calc_daily_change
-from indicator_engine import analyze, FourLampResult, analyze_batch
+from analyzer import calc_all_ma, calc_daily_change, calc_volatility
 from database import (
-    init_db, get_watchlist, add_watchlist, remove_watchlist, is_in_watchlist,
-    get_search_history, add_search_history, get_refresh_interval,
-    set_refresh_interval, update_watchlist_name
+    add_watchlist,
+    get_refresh_interval,
+    get_search_history,
+    get_watchlist,
+    is_in_watchlist,
+    remove_watchlist,
+    set_refresh_interval,
 )
+from fetcher import (
+    KlineItem,
+    StockQuote,
+    fetch_kline,
+    fetch_market_overview,
+    fetch_quote,
+    fetch_quotes_batch,
+    search_stocks,
+)
+from indicator_engine import FourLampResult, analyze, analyze_batch
 from scheduler import get_scheduler
 
 # ─── 数据序列化 ──────────────────────────────────────────────────────
@@ -323,7 +330,6 @@ class StockAPI:
     def _start_simple_http(self):
         """降级方案：简易HTTP服务器"""
         # 简易实现只返回静态提示
-        import http.server
 
         class SimpleHandler(BaseHTTPRequestHandler):
             def do_GET(self):

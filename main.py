@@ -3,8 +3,8 @@ main.py - A股短线决策辅助工具 主入口
 运行在 Termux / 任何终端环境
 """
 
-import sys
 import os
+import sys
 
 # 确保项目根目录在导入路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

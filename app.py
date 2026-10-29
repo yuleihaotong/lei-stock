@@ -3,14 +3,15 @@ app.py - 主入口文件
 启动textual终端UI，初始化定时任务和数据库
 """
 
-import sys
 import os
+import sys
 
 # 确保可以导入项目模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from database import init_db
 from textual.app import App
+
+from database import init_db
 from ui.main_screen import StockMainScreen
 
 
@@ -191,7 +192,7 @@ class StockToolApp(App):
         self.current_name = ""
 
     def compose(self):
-        from textual.widgets import Header, Footer
+        from textual.widgets import Footer, Header
         yield Header()
         yield StockMainScreen()
         yield Footer()

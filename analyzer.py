@@ -4,6 +4,7 @@ analyzer.py - 技术指标计算模块
 """
 
 from typing import Optional
+
 from fetcher import KlineItem, StockQuote
 
 

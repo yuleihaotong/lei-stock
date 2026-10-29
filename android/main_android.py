@@ -6,7 +6,6 @@ main_android.py - Android APK 主入口
 import os
 import sys
 import time
-import threading
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -15,14 +14,13 @@ from database import init_db
 from scheduler import get_scheduler
 from web_api import start_api
 
-
 # ─── Android WebView 桥接 ──────────────────────────────────────────
 # 通过 Python-for-Android 的 android 模块与 Java WebView 通信
 # 如果不可用（开发环境），则使用纯文本提示
 
 try:
-    from android import activity, mActivity
     import android
+    from android import activity, mActivity
     ANDROID_AVAILABLE = True
 except ImportError:
     ANDROID_AVAILABLE = False
@@ -102,7 +100,7 @@ def load_webview():
                 webview.getSettings().setDomStorageEnabled(True)
                 # 允许加载本地文件
                 webview.getSettings().setAllowFileAccess(True)
-                webview.loadUrl(f"http://127.0.0.1:5000/")
+                webview.loadUrl("http://127.0.0.1:5000/")
         except Exception as e:
             print(f"[main] WebView加载失败: {e}")
     except Exception as e:

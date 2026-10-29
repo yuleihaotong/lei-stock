@@ -3,35 +3,36 @@ main_screen.py - 主界面
 包含首页(自选股+大盘)、搜索页、详情页、设置页的屏幕管理和导航
 """
 
-import time
 from typing import Optional
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
-from textual.screen import Screen
-from textual.widgets import (
-    Header, Footer, Label, Button, Input, Static,
-    ListView, ListItem, TabbedContent, TabPane, DataTable
-)
-from textual.reactive import reactive
 from textual import events
-from rich.text import Text
-from rich.table import Table
-from rich.layout import Layout
+from textual.app import ComposeResult
+from textual.containers import Container, ScrollableContainer
+from textual.screen import Screen
+from textual.widgets import Input, Static, TabbedContent, TabPane
 
-from fetcher import (
-    fetch_market_overview, fetch_quote, fetch_kline,
-    fetch_quotes_batch, search_stocks, MarketOverview, StockQuote, KlineItem
-)
-from analyzer import calc_all_ma, calc_volatility, calc_current_change
-from indicator_engine import analyze, FourLampResult
+from analyzer import calc_all_ma, calc_volatility
 from database import (
-    get_watchlist, add_watchlist, remove_watchlist, is_in_watchlist,
-    get_search_history, add_search_history, get_refresh_interval,
-    set_refresh_interval, update_watchlist_name, get_setting, set_setting
+    add_search_history,
+    add_watchlist,
+    get_refresh_interval,
+    get_setting,
+    get_watchlist,
+    is_in_watchlist,
+    remove_watchlist,
+    set_refresh_interval,
 )
-from scheduler import get_scheduler, StockScheduler
-
+from fetcher import (
+    KlineItem,
+    MarketOverview,
+    fetch_kline,
+    fetch_market_overview,
+    fetch_quote,
+    fetch_quotes_batch,
+    search_stocks,
+)
+from indicator_engine import FourLampResult, analyze
+from scheduler import get_scheduler
 
 # ─── 工具函数 ─────────────────────────────────────────────────────────
 
@@ -384,7 +385,7 @@ class DetailScreen(Screen):
         lines.append("═══ 四灯决策指示 ═══")
         lamp_text, lamp_colors = make_lamp_text(result)
         lines.append(f"  {lamp_text}")
-        lines.append(f"  指示灯: ", end="")
+        lines.append("  指示灯: ", end="")
         for i, (label, val) in enumerate(zip(
             ["区间", "走势", "板块", "量价"],
             [result.qujian, result.zoushi, result.bankuai, result.liangjia]
@@ -457,7 +458,7 @@ class SettingsScreen(Screen):
         # 刷新间隔
         current_interval = get_refresh_interval()
         interval_label = get_setting("refresh_interval_label", "1分钟")
-        lines.append(f"═══ 刷新设置 ═══")
+        lines.append("═══ 刷新设置 ═══")
         lines.append(f"  当前间隔: {interval_label} ({current_interval}秒)")
         lines.append("")
         lines.append("  [30秒]  [1分钟]  [5分钟]")
