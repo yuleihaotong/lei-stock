@@ -230,10 +230,7 @@ buildozer android debug
 
 ## 🧪 回测
 
-`backtest.py` 用来回答一个问题：**四灯亮起之后买入，历史上到底赚不赚。**
+回测器已独立成项目：[**backtest-kit**](https://github.com/yuleihaotong/backtest-kit)（分数驱动，数据源无关）。
 
-用法见 [BACKTEST.md](BACKTEST.md)，结论见 [docs/backtest-findings.md](docs/backtest-findings.md)。
-
-```bash
-python backtest.py --universe --days 500
-```
+四灯策略的实测结论见 [docs/backtest-findings.md](docs/backtest-findings.md)：
+**四灯全红不构成买入信号**，两个时间切分样本里都不优于 0 灯。

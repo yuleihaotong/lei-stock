@@ -73,10 +73,22 @@
 
 ## 复现
 
-```bash
-python backtest.py --universe --days 500 \
-  --out reports/backtest.md --csv reports/trades.csv
+回测器已独立为 [backtest-kit](https://github.com/yuleihaotong/backtest-kit)。
+分数就是 `indicator_engine.analyze()` 给出的红灯数：
 
-python backtest.py --universe --beg 20190101 --end 20211231 \
-  --out reports/backtest-2019-2021.md --csv reports/trades-2019-2021.csv
+```python
+from backtest_kit import Bar, markdown, run
+
+from fetcher import fetch_kline
+from indicator_engine import analyze
+
+def four_lamp(bars, i):
+    return analyze("600519", bars[: i + 1]).red_count
+
+klines = fetch_kline("600519", days=500)
+bars = [Bar(b.date, b.open_p, b.high_p, b.low_p, b.close_p, b.volume, b.amount)
+        for b in klines]
+
+trades = run(bars, signal=four_lamp, cost_pct=0.15, code="600519")
+print(markdown(trades, title="四灯回测"))
 ```
