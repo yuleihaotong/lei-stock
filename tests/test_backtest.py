@@ -98,3 +98,28 @@ def test_buy_and_hold_matches_definition():
     bars = series([10 + 0.1 * i for i in range(60)])
     expected = (bars[-1].close_p / bars[WARMUP].open_p - 1) * 100
     assert buy_and_hold(bars) == pytest.approx(expected)
+
+
+def test_cost_is_subtracted_from_every_trade():
+    bars = series([10 + 0.1 * i for i in range(60)])
+    gross = run("600519", bars, horizons=(1,), warmup=WARMUP)
+    net = run("600519", bars, horizons=(1,), warmup=WARMUP, cost_pct=0.15)
+
+    assert len(gross) == len(net)
+    assert net[0].ret_pct == pytest.approx(gross[0].ret_pct - 0.15)
+    assert net[-1].ret_pct == pytest.approx(gross[-1].ret_pct - 0.15)
+
+
+def test_custom_signal_replaces_four_lamps():
+    bars = series([10 + 0.1 * i for i in range(60)])
+    calls = []
+
+    def always_two(code, day_bars, i):
+        calls.append(i)
+        return 2
+
+    trades = run("600519", bars, horizons=(1,), warmup=WARMUP, signal=always_two)
+
+    assert calls, "信号函数应该被逐日调用"
+    assert all(t.lamps == 2 for t in trades)
+    assert len(trades) == len(set(calls)), "每个信号日只应产生一笔 1 日交易"

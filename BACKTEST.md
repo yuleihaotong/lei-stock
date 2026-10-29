@@ -1,6 +1,9 @@
-# 回测器使用说明
+# 回测器使用说明（通用版）
 
-`backtest.py` 回答一个问题：**四灯亮起之后买入，历史上到底赚不赚。**
+`backtest.py` 回答一个问题：**某个信号出现之后买入，历史上到底赚不赚。**
+
+默认信号是四灯（0–4 盏红灯），但**它不绑死在四灯上**——任何"给某一天打个分"的规则都能接进来，
+见下面「接入自己的信号」。
 
 它不是"策略优化器"，也不是"收益率计算器"——它是**用来证伪的**。写它的初衷就是
 把"四灯全红 → 可进场"这句话拿到数据上验一遍，结果证伪了（见
@@ -71,8 +74,45 @@ python backtest.py --universe --beg 20190101 --end 20211231 \
 | `--universe` | 关 | 用内置 10 只蓝筹 |
 | `--days` | 500 | 取最近多少个交易日 |
 | `--beg` / `--end` | `0` / `20500101` | 按日期区间取数；**给了 `--beg` 就忽略 `--days`** |
+| `--cost-pct` | `0` | 单次往返成本（百分点），`0.15` 表示每笔扣 0.15% |
+| `--label` | `红灯数` | 分桶列的表头名（换成别的信号时改这里） |
+| `--title` | `四灯策略回测报告` | 报告标题 |
 | `--out` | `reports/backtest.md` | 报告路径 |
 | `--csv` | `reports/trades.csv` | 明细路径 |
+
+---
+
+## 接入自己的信号
+
+信号是一个函数：**给定代码、全部 K 线、当前下标，返回一个 0–4 的整数分数。**
+
+```python
+from backtest import run
+from fetcher import fetch_kline
+
+def volume_spike(code, bars, i):
+    """例：成交量是前 5 日均量 2 倍以上 → 4 分，1.5 倍 → 2 分，否则 0 分。"""
+    if i < 6:
+        return 0
+    avg = sum(b.volume for b in bars[i - 5:i]) / 5
+    ratio = bars[i].volume / avg if avg else 0
+    if ratio >= 2.0:
+        return 4
+    if ratio >= 1.5:
+        return 2
+    return 0
+
+bars = fetch_kline("600519", days=500)
+trades = run("600519", bars, signal=volume_spike, cost_pct=0.15)
+print(len(trades), sum(t.ret_pct for t in trades) / len(trades))
+```
+
+两条约定**必须遵守**，否则回测立刻作废：
+
+1. **只能看 `bars[:i+1]`**——函数里不能碰 `bars[i+1:]`，那是未来。
+2. **返回整数分数**，报告按分数分桶（列名用 `--label` 改）。
+
+命令行侧：目前 CLI 只接四灯，自定义信号请走上面的 Python API。
 
 ---
 

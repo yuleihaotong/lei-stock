@@ -24,6 +24,7 @@ import statistics
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from fetcher import KlineItem, StockQuote, fetch_kline
 from indicator_engine import FourLampResult, analyze
@@ -82,18 +83,33 @@ def evaluate_day(code: str, bars: list[KlineItem], i: int) -> FourLampResult:
     return analyze(code, bars[: i + 1], synthetic_quote(code, bars, i))
 
 
+# 信号函数：给定代码、全部K线、当前下标，返回一个 0–4 的整数"强度"。
+# 换成任何别的规则都可以，只要遵守两条：只看 bars[:i+1]，返回 int。
+SignalFn = Callable[[str, list[KlineItem], int], int]
+
+
+def four_lamp_signal(code: str, bars: list[KlineItem], i: int) -> int:
+    """四灯信号：返回第 i 天的红灯数。"""
+    return evaluate_day(code, bars, i).red_count
+
+
 def run(
     code: str,
     bars: list[KlineItem],
     horizons: tuple[int, ...] = HORIZONS,
     warmup: int = WARMUP,
+    signal: SignalFn = four_lamp_signal,
+    cost_pct: float = 0.0,
 ) -> list[Trade]:
-    """逐日回测一只股票，返回所有可成交的信号。"""
+    """逐日回测一只股票，返回所有可成交的信号。
+
+    :param signal:   信号函数，默认四灯；换成任何返回 0–4 的函数都行
+    :param cost_pct: 单次往返成本（百分点），从每笔收益里直接扣
+    """
     trades: list[Trade] = []
     n = len(bars)
     for i in range(warmup, n - 1):
-        result = evaluate_day(code, bars, i)
-        lights = result.red_count
+        lights = signal(code, bars, i)
         for horizon in horizons:
             j = i + horizon
             if j >= n:
@@ -112,7 +128,7 @@ def run(
                     exit_date=bars[j].date,
                     exit_price=exit_price,
                     horizon=horizon,
-                    ret_pct=(exit_price / entry - 1) * 100,
+                    ret_pct=(exit_price / entry - 1) * 100 - cost_pct,
                 )
             )
     return trades
@@ -165,18 +181,22 @@ def buy_and_hold(bars: list[KlineItem], warmup: int = WARMUP) -> float:
 
 
 def markdown_report(per_code: dict[str, list[Trade]], baselines: dict[str, float],
-                    days: int) -> str:
+                    days: int, *, title: str = "四灯策略回测报告",
+                    label: str = "红灯数", cost_pct: float = 0.0,
+                    signal_name: str = "four-lamp") -> str:
     lines: list[str] = []
-    lines.append("# 四灯策略回测报告\n")
+    lines.append(f"# {title}\n")
+    cost_text = f"已扣单次往返成本 {cost_pct:.2f}%" if cost_pct else "未扣成本（实际再减 0.1%–0.2%）"
     lines.append(
         f"- 样本：{len(per_code)} 只股票，每只最近 {days} 个交易日\n"
+        f"- 信号：`{signal_name}`\n"
         f"- 口径：信号日收盘 → 次日开盘买入 → 持有 N 日收盘卖出\n"
-        f"- 未计手续费/印花税/滑点（实际再加 0.1%–0.2% 成本）\n"
+        f"- 成本：{cost_text}\n"
     )
 
     for horizon in HORIZONS:
         lines.append(f"\n## 持有 {horizon} 日\n")
-        lines.append("| 红灯数 | 样本 | 胜率 | 平均 | 中位 | P10 | P90 | 最差 | 最好 | t |")
+        lines.append(f"| {label} | 样本 | 胜率 | 平均 | 中位 | P10 | P90 | 最差 | 最好 | t |")
         lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
         all_trades = [t for ts in per_code.values() for t in ts]
         for lamps, stat in by_lamps(all_trades, horizon).items():
@@ -231,6 +251,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--days", type=int, default=500, help="每只股票取多少个交易日")
     parser.add_argument("--beg", type=str, default="0", help="起始日期 YYYYMMDD（给了就按区间取）")
     parser.add_argument("--end", type=str, default="20500101", help="结束日期 YYYYMMDD")
+    parser.add_argument("--cost-pct", type=float, default=0.0,
+                        help="单次往返成本（百分点），如 0.15 表示扣 0.15%%")
+    parser.add_argument("--label", type=str, default="红灯数", help="分桶列的表头名")
+    parser.add_argument("--title", type=str, default="四灯策略回测报告", help="报告标题")
     parser.add_argument("--out", type=str, default="reports/backtest.md")
     parser.add_argument("--csv", type=str, default="reports/trades.csv")
     args = parser.parse_args(argv)
@@ -249,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
         if len(bars) < WARMUP + 10:
             print(f"[skip] {code}: 只有 {len(bars)} 根 K 线，样本不足", file=sys.stderr)
             continue
-        trades = run(code, bars)
+        trades = run(code, bars, cost_pct=args.cost_pct)
         per_code[code] = trades
         all_trades.extend(trades)
         baselines[code] = buy_and_hold(bars)
@@ -259,7 +283,9 @@ def main(argv: list[str] | None = None) -> int:
         print("没有可用样本", file=sys.stderr)
         return 1
 
-    report = markdown_report(per_code, baselines, args.days)
+    report = markdown_report(per_code, baselines, args.days,
+                             title=args.title, label=args.label,
+                             cost_pct=args.cost_pct)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(report, encoding="utf-8")
