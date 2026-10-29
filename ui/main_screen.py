@@ -82,7 +82,7 @@ def render_kline(kline_data: list[KlineItem], width: int = 50, height: int = 12)
     data = kline_data[-width:] if len(kline_data) > width else kline_data
     n = len(data)
 
-    prices = [item.close_p for item in data]
+    _prices = [item.close_p for item in data]
     highs = [item.high_p for item in data]
     lows = [item.low_p for item in data]
 
@@ -243,7 +243,7 @@ class HomeScreen(Screen):
     def on_click(self, event: events.Click):
         """点击个股进入详情页"""
         # 获取点击位置对应的股票代码
-        widget = self.query_one("#watchlist-container", Container)
+        _widget = self.query_one("#watchlist-container", Container)
         # 简单实现：通过点击坐标判断
         try:
             y = event.y
@@ -281,7 +281,7 @@ class SearchScreen(Screen):
             return
         add_search_history(keyword)
         results = search_stocks(keyword)
-        container = self.query_one("#search-results", ScrollableContainer)
+        _container = self.query_one("#search-results", ScrollableContainer)
         info = self.query_one("#search-info", Static)
 
         if not results:
@@ -300,7 +300,7 @@ class SearchScreen(Screen):
     def on_click(self, event: events.Click):
         """点击搜索结果"""
         try:
-            container = self.query_one("#search-results", ScrollableContainer)
+            _container = self.query_one("#search-results", ScrollableContainer)
             content = self.query_one("#search-info", Static)
             text = content.render()
             if isinstance(text, str):
@@ -504,7 +504,7 @@ class SettingsScreen(Screen):
                 self.refresh_settings()
             elif "[删除]" in text:
                 # 删除自选股
-                watchlist = get_watchlist()
+                _watchlist = get_watchlist()
                 lines = text.split("\n")
                 for line in lines:
                     if "[删除]" in line and "  " in line:

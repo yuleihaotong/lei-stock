@@ -131,10 +131,10 @@ def _secid(code: str) -> str:
 
 def _amplitude(high, low, pre_close) -> float:
     """振幅 % =（最高-最低）/ 昨收 * 100"""
-    h, l, pc = _pv(high), _pv(low), _pv(pre_close)
+    high_v, low_v, pc = _pv(high), _pv(low), _pv(pre_close)
     if pc <= 0:
         return 0.0
-    return round((h - l) / pc * 100.0, 2)
+    return round((high_v - low_v) / pc * 100.0, 2)
 
 
 def _pv(val) -> float:

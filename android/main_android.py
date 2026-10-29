@@ -19,8 +19,8 @@ from web_api import start_api
 # 如果不可用（开发环境），则使用纯文本提示
 
 try:
-    import android
-    from android import activity, mActivity
+    import android  # noqa: F401
+    from android import activity, mActivity  # noqa: F401
     ANDROID_AVAILABLE = True
 except ImportError:
     ANDROID_AVAILABLE = False
